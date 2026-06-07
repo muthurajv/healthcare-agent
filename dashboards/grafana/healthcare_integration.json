@@ -1,0 +1,63 @@
+{
+  "title": "HCSC Agent — Healthcare API Integration",
+  "uid": "hcsc-healthcare-integration",
+  "tags": ["hcsc", "fhir", "payer", "api"],
+  "timezone": "browser",
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "FHIR API Latency (p95)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [{
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "expr": "histogram_quantile(0.95, sum by (le) (rate(http_client_request_duration_seconds_bucket{url=~\".*.fhir.azurehealthcareapis.*\"}[5m])))",
+        "legendFormat": "FHIR p95"
+      }]
+    },
+    {
+      "id": 2,
+      "title": "Payer/Network API Error Rate",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [{
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "expr": "rate(http_client_requests_total{url=~\".*/eligibility/.*\",status_code=~\"5..\"}[5m])",
+        "legendFormat": "Payer API 5xx/sec"
+      }]
+    },
+    {
+      "id": 3,
+      "title": "FHIR Appointment Creation Success Rate",
+      "type": "gauge",
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 8},
+      "fieldConfig": {"defaults": {"unit": "percentunit"}},
+      "targets": [{
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "expr": "sum(traces_spanmetrics_calls_total{span_name=\"schedule_appointment\",status_code=\"STATUS_CODE_OK\"}) / sum(traces_spanmetrics_calls_total{span_name=\"schedule_appointment\"})"
+      }]
+    },
+    {
+      "id": 4,
+      "title": "Provider Search — No-Result Rate",
+      "type": "gauge",
+      "gridPos": {"h": 6, "w": 8, "x": 8, "y": 8},
+      "fieldConfig": {"defaults": {"unit": "percentunit"}},
+      "targets": [{
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "expr": "sum(traces_spanmetrics_calls_total{span_name=\"search_providers\",agent_status=\"no_providers_found\"}) / sum(traces_spanmetrics_calls_total{span_name=\"search_providers\"})"
+      }]
+    },
+    {
+      "id": 5,
+      "title": "Avg Providers Found per Request",
+      "type": "stat",
+      "gridPos": {"h": 6, "w": 8, "x": 16, "y": 8},
+      "targets": [{
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "expr": "avg(traces_spanmetrics_calls_total{span_name=\"search_providers\",provider_count!=\"\"})"
+      }]
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "title": "HCSC Agent — Compliance & Safety",
+  "uid": "hcsc-compliance-safety",
+  "tags": ["hcsc", "hipaa", "compliance", "phi"],
+  "timezone": "browser",
+  "refresh": "1m",
+  "panels": [
+    {
+      "id": 1,
+      "title": "PHI Detected in Requests",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              {"color": "green", "value": 0},
+              {"color": "yellow", "value": 1}
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "expr": "sum(increase(traces_spanmetrics_calls_total{span_name=\"input_phi_scan\",guardrail_pii_detected=\"true\"}[24h]))"
+      }]
+    },
+    {
+      "id": 2,
+      "title": "Consent Denied Events",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              {"color": "green", "value": 0},
+              {"color": "red", "value": 1}
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "expr": "sum(increase(traces_spanmetrics_calls_total{span_name=\"consent_check\",guardrail_consent_valid=\"false\"}[24h]))"
+      }]
+    },
+    {
+      "id": 3,
+      "title": "Tool Authorization Failures",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              {"color": "green", "value": 0},
+              {"color": "red", "value": 1}
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "expr": "sum(increase(tool_authorization_failures_total[24h]))"
+      }]
+    },
+    {
+      "id": 4,
+      "title": "PHI Detection Events Over Time",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "rate(traces_spanmetrics_calls_total{span_name=\"input_phi_scan\",guardrail_pii_detected=\"true\"}[5m])",
+          "legendFormat": "PHI detected/sec"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "rate(traces_spanmetrics_calls_total{span_name=\"response_redaction\",agent_status=\"redacted\"}[5m])",
+          "legendFormat": "Response redactions/sec"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Audit Trail — Recent Events",
+      "type": "logs",
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 12},
+      "targets": [{
+        "datasource": {"type": "loki", "uid": "loki"},
+        "expr": "{job=\"hcsc-healthcare-agent\"} |= \"AUDIT\"",
+        "legendFormat": ""
+      }]
+    }
+  ]
+}

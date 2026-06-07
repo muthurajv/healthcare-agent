@@ -1,0 +1,58 @@
+{
+  "title": "HCSC Agent — LLM Cost & Usage",
+  "uid": "hcsc-llm-cost",
+  "tags": ["hcsc", "llm", "cost", "openai"],
+  "timezone": "browser",
+  "refresh": "5m",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Total Prompt Tokens (24h)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "targets": [{
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "expr": "sum(increase(llm_prompt_tokens_total[24h]))"
+      }]
+    },
+    {
+      "id": 2,
+      "title": "Total Completion Tokens (24h)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "targets": [{
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "expr": "sum(increase(llm_completion_tokens_total[24h]))"
+      }]
+    },
+    {
+      "id": 3,
+      "title": "Estimated Cost per Appointment ($)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "fieldConfig": {"defaults": {"unit": "currencyUSD", "decimals": 4}},
+      "targets": [{
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "expr": "(sum(increase(llm_prompt_tokens_total[24h])) * 0.00001 + sum(increase(llm_completion_tokens_total[24h])) * 0.00003) / sum(increase(traces_spanmetrics_calls_total{span_name=\"schedule_appointment\",status_code=\"STATUS_CODE_OK\"}[24h]))"
+      }]
+    },
+    {
+      "id": 4,
+      "title": "Token Usage Over Time",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "rate(llm_prompt_tokens_total[5m])",
+          "legendFormat": "Prompt tokens/sec"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "rate(llm_completion_tokens_total[5m])",
+          "legendFormat": "Completion tokens/sec"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "title": "HCSC Agent — Workflow Performance",
+  "uid": "hcsc-agent-workflow",
+  "tags": ["hcsc", "langgraph", "workflow"],
+  "timezone": "browser",
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Node Latency (p95) by Step",
+      "type": "barchart",
+      "gridPos": {"h": 8, "w": 16, "x": 0, "y": 0},
+      "targets": [{
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "expr": "histogram_quantile(0.95, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket[5m])))",
+        "legendFormat": "{{span_name}}"
+      }]
+    },
+    {
+      "id": 2,
+      "title": "Node Error Rate",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0},
+      "targets": [{
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "expr": "sum by (span_name) (rate(traces_spanmetrics_calls_total{status_code=\"STATUS_CODE_ERROR\"}[5m]))",
+        "legendFormat": "{{span_name}} errors/sec"
+      }]
+    },
+    {
+      "id": 3,
+      "title": "Workflow Drop-off Funnel",
+      "type": "bargauge",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "options": {"orientation": "horizontal"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(traces_spanmetrics_calls_total{span_name=\"input_phi_scan\"})",
+          "legendFormat": "1. Input received"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(traces_spanmetrics_calls_total{span_name=\"parse_request\"})",
+          "legendFormat": "2. Consent granted"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(traces_spanmetrics_calls_total{span_name=\"search_providers\"})",
+          "legendFormat": "3. Providers found"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(traces_spanmetrics_calls_total{span_name=\"validate_network\"})",
+          "legendFormat": "4. Network validated"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(traces_spanmetrics_calls_total{span_name=\"find_availability\"})",
+          "legendFormat": "5. Slots found"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(traces_spanmetrics_calls_total{span_name=\"schedule_appointment\"})",
+          "legendFormat": "6. Appointment booked"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Human Confirmation Rate",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
+      "fieldConfig": {"defaults": {"unit": "percentunit"}},
+      "targets": [{
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "expr": "sum(traces_spanmetrics_calls_total{span_name=\"schedule_appointment\"}) / sum(traces_spanmetrics_calls_total{span_name=\"find_availability\"})"
+      }]
+    }
+  ]
+}
