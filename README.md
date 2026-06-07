@@ -4,7 +4,7 @@ An agentic AI system that helps healthcare members find in-network specialists a
 
 ## What It Does
 
-A member says: *"Find me a cardiologist near Frisco who is in-network and available next week."*
+A member says: *"Find me a cardiologist near Dallas who is in-network and available next week."*
 
 The agent autonomously:
 1. Redacts PHI from the input before any LLM call
