@@ -93,8 +93,8 @@ def run_query(
         print(f"\n{i}. {doc.get('name')}  |  {doc.get('specialty')}  |  Rating: {doc.get('rating')}")
         print(f"   Location : {doc.get('location')}  |  Hospital: {doc.get('hospital_affiliation')}")
         print(f"   Languages: {', '.join(doc.get('languages', []))}")
-        accepting = "✓ Accepting" if doc.get("accepting_new_patients") else "✗ Not accepting"
-        telehealth = "✓ Telehealth" if doc.get("telehealth_available") else ""
+        accepting = "[Y] Accepting" if doc.get("accepting_new_patients") else "[N] Not accepting"
+        telehealth = "[Y] Telehealth" if doc.get("telehealth_available") else ""
         print(f"   Status   : {accepting}  {telehealth}")
         print(f"   Score    : {score:.4f}")
         if caption_text:

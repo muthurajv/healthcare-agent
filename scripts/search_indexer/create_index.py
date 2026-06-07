@@ -17,10 +17,7 @@ from azure.core.credentials import AzureKeyCredential
 from azure.core.exceptions import ResourceNotFoundError
 from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import (
-    ComplexField,
     CorsOptions,
-    GeographyPoint,
-    HnswAlgorithmConfiguration,
     MagnitudeScoringFunction,
     MagnitudeScoringParameters,
     ScoringProfile,
@@ -33,10 +30,6 @@ from azure.search.documents.indexes.models import (
     SemanticPrioritizedFields,
     SemanticSearch,
     SimpleField,
-    TagScoringFunction,
-    TagScoringParameters,
-    VectorSearch,
-    VectorSearchProfile,
 )
 
 # ── Load config ───────────────────────────────────────────────────────────────
@@ -119,6 +112,9 @@ def build_index() -> SearchIndex:
     ]
 
     # ── Scoring profile ───────────────────────────────────────────────────────
+    # Boost highly-rated providers. New-patient filtering is handled via OData
+    # filter (accepting_new_patients eq true) rather than a scoring function
+    # because TagScoringFunction requires String/Collection(String) fields.
     scoring_profiles = [
         ScoringProfile(
             name="boost-rating-new-patients",
@@ -133,10 +129,14 @@ def build_index() -> SearchIndex:
                         should_boost_beyond_range_by_constant=True,
                     ),
                 ),
-                TagScoringFunction(
-                    field_name="accepting_new_patients",
-                    boost=5,
-                    parameters=TagScoringParameters(tags_parameter="acceptingTag"),
+                MagnitudeScoringFunction(
+                    field_name="review_count",
+                    boost=2,
+                    parameters=MagnitudeScoringParameters(
+                        boosting_range_start=100,
+                        boosting_range_end=500,
+                        should_boost_beyond_range_by_constant=True,
+                    ),
                 ),
             ],
         )
